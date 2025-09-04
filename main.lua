@@ -473,17 +473,17 @@ local function addMinimizeButton()
             return 
         end
         
+        -- Try to find any suitable header element
         local topBar = mainFrame:FindFirstChild("MainHeader") 
                     or mainFrame:FindFirstChild("Header")
                     or mainFrame:FindFirstChild("TopBar")
                     or mainFrame:FindFirstChild("TitleBar")
+                    or mainFrame:FindFirstChild("Tidemeter")  -- Found in debug
         
+        -- If still no header found, create minimize button on main frame
         if not topBar then 
-            warn("❌ Header not found, available children:")
-            for _, child in pairs(mainFrame:GetChildren()) do
-                print("  - " .. child.Name .. " (" .. child.ClassName .. ")")
-            end
-            return 
+            warn("❌ No header found, using main frame for minimize button")
+            topBar = mainFrame
         end
         
         -- Check if minimize button already exists
@@ -495,12 +495,17 @@ local function addMinimizeButton()
         -- Create minimize button
         local minimizeBtn = Instance.new("TextButton")
         minimizeBtn.Name = "MinimizeButton"
-        minimizeBtn.Size = UDim2.new(0, 25, 0, 25)
-        minimizeBtn.Position = UDim2.new(1, -80, 0, 2)
+        minimizeBtn.Size = UDim2.new(0, 30, 0, 30)
+        -- Position relative to topBar, adjust if it's the main frame
+        if topBar == mainFrame then
+            minimizeBtn.Position = UDim2.new(1, -35, 0, 5)
+        else
+            minimizeBtn.Position = UDim2.new(1, -35, 0, 2)
+        end
         minimizeBtn.BackgroundColor3 = Color3.fromRGB(74, 99, 135)
-        minimizeBtn.Text = "_"
+        minimizeBtn.Text = "—"
         minimizeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-        minimizeBtn.TextSize = 16
+        minimizeBtn.TextSize = 18
         minimizeBtn.Font = Enum.Font.SourceSansBold
         minimizeBtn.BorderSizePixel = 0
         minimizeBtn.ZIndex = 10
@@ -565,6 +570,8 @@ pcall(function()
                                 or mainFrame:FindFirstChild("Header")
                                 or mainFrame:FindFirstChild("TopBar")
                                 or mainFrame:FindFirstChild("TitleBar")
+                                or mainFrame:FindFirstChild("Tidemeter")
+                                or mainFrame  -- Fallback to main frame
                     if header then
                         -- Enable dragging for main UI
                         local dragging = false
