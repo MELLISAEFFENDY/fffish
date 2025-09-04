@@ -451,66 +451,6 @@ local success = pcall(function()
         
         Window = library.CreateLib("🎣 Fisch Script", "Ocean")
         print("✅ Main UI window created successfully")
-        
-        -- Make UI draggable
-        task.spawn(function()
-            task.wait(2)
-            pcall(function()
-                local kavoGui = lp.PlayerGui:FindFirstChild("Kavo")
-                if not kavoGui then
-                    -- Look for any ScreenGui with Main frame
-                    for _, gui in pairs(lp.PlayerGui:GetChildren()) do
-                        if gui:IsA("ScreenGui") and gui:FindFirstChild("Main") then
-                            kavoGui = gui
-                            break
-                        end
-                    end
-                end
-                
-                if kavoGui and kavoGui:FindFirstChild("Main") then
-                    local mainFrame = kavoGui:FindFirstChild("Main")
-                    local header = mainFrame:FindFirstChild("MainHeader") 
-                                or mainFrame:FindFirstChild("Header")
-                                or mainFrame:FindFirstChild("TopBar")
-                                or mainFrame:FindFirstChild("TitleBar")
-                                or mainFrame:FindFirstChild("Tidemeter")
-                                or mainFrame  -- Fallback to main frame
-                    if header then
-                        -- Enable dragging for main UI
-                        local dragging = false
-                        local dragInput, mousePos, framePos
-
-                        header.InputBegan:Connect(function(input)
-                            if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                                dragging = true
-                                mousePos = input.Position
-                                framePos = mainFrame.Position
-                                
-                                input.Changed:Connect(function()
-                                    if input.UserInputState == Enum.UserInputState.End then
-                                        dragging = false
-                                    end
-                                end)
-                            end
-                        end)
-
-                        header.InputChanged:Connect(function(input)
-                            if input.UserInputType == Enum.UserInputType.MouseMovement then
-                                dragInput = input
-                            end
-                        end)
-
-                        game:GetService("UserInputService").InputChanged:Connect(function(input)
-                            if input == dragInput and dragging then
-                                local delta = input.Position - mousePos
-                                mainFrame.Position = UDim2.new(framePos.X.Scale, framePos.X.Offset + delta.X, framePos.Y.Scale, framePos.Y.Offset + delta.Y)
-                            end
-                        end)
-                        print("✅ UI dragging enabled")
-                    end
-                end
-            end)
-        end)
     else
         error("❌ Library not available")
     end

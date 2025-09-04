@@ -14,6 +14,7 @@ function Kavo:DraggingEnabled(frame, parent)
     -- stolen from wally or kiriot, kek
     local dragging = false
     local dragInput, mousePos, framePos
+    local UserInputService = game:GetService("UserInputService")
 
     frame.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -35,7 +36,7 @@ function Kavo:DraggingEnabled(frame, parent)
         end
     end)
 
-    input.InputChanged:Connect(function(input)
+    UserInputService.InputChanged:Connect(function(input)
         if input == dragInput and dragging then
             local delta = input.Position - mousePos
             parent.Position  = UDim2.new(framePos.X.Scale, framePos.X.Offset + delta.X, framePos.Y.Scale, framePos.Y.Offset + delta.Y)
@@ -243,6 +244,7 @@ function Kavo.CreateLib(kavName, themeList)
     MainHeader.BackgroundColor3 = themeList.Header
     Objects[MainHeader] = "BackgroundColor3"
     MainHeader.Size = UDim2.new(0, 525, 0, 29)
+    MainHeader.Active = true  -- Enable input for dragging
     headerCover.CornerRadius = UDim.new(0, 4)
     headerCover.Name = "headerCover"
     headerCover.Parent = MainHeader
