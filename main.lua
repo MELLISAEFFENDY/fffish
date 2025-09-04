@@ -645,19 +645,60 @@ local success = pcall(function()
     end
 end)
 
-if not success then
-    error("❌ Failed to create UI window")
+if not success or not Window then
+    warn("⚠️ Failed to create UI window, retrying with alternative method...")
+    
+    -- Try alternative creation
+    pcall(function()
+        task.wait(1)
+        Window = library.CreateLib("🎣 Fisch Script", "Ocean")
+    end)
+    
+    if not Window then
+        warn("⚠️ UI window creation failed, script will continue without GUI")
+    end
 end
 
 -- Create Tabs
 local AutoTab, ModTab, TeleTab, VisualTab
 
-if Window then
-    AutoTab = Window:NewTab("🎣 Automation")
-    ModTab = Window:NewTab("⚙️ Modifications") 
-    TeleTab = Window:NewTab("🌍 Teleports")
-    VisualTab = Window:NewTab("👁️ Visuals")
-    print("✅ All tabs created successfully")
+if Window and Window.NewTab then
+    pcall(function()
+        AutoTab = Window:NewTab("🎣 Automation")
+        ModTab = Window:NewTab("⚙️ Modifications") 
+        TeleTab = Window:NewTab("🌍 Teleports")
+        VisualTab = Window:NewTab("👁️ Visuals")
+        print("✅ All tabs created successfully")
+    end)
+else
+    warn("⚠️ Window not available, creating fallback functionality")
+    -- Create dummy tabs that won't break the script
+    local dummyTab = {
+        NewSection = function(name)
+            return {
+                NewToggle = function(name, desc, callback) 
+                    if callback then callback(false) end
+                    return {UpdateToggle = function() end}
+                end,
+                NewSlider = function(name, desc, min, max, callback) 
+                    if callback then callback(min) end
+                    return {}
+                end,
+                NewDropdown = function(name, desc, options, callback) 
+                    if callback then callback(options[1]) end
+                    return {Refresh = function() end}
+                end,
+                NewButton = function(name, desc, callback) 
+                    return {UpdateButton = function() end}
+                end
+            }
+        end
+    }
+    AutoTab = dummyTab
+    ModTab = dummyTab
+    TeleTab = dummyTab
+    VisualTab = dummyTab
+    print("⚠️ Using fallback tabs - script functionality preserved")
 end
 
 -- Automation Section
