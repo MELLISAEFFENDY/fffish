@@ -1399,6 +1399,9 @@ function Kavo.CreateLib(kavName, themeList)
                 end)()
 
                 local Value = minvalue or 0
+                local moveconnection = nil
+                local releaseconnection = nil
+                
                 sliderBtn.MouseButton1Down:Connect(function()
                     if not focusing then
                         game.TweenService:Create(val, TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.In), {
@@ -1417,6 +1420,9 @@ function Kavo.CreateLib(kavName, themeList)
                         
                         updateSlider()
                         
+                        if moveconnection then moveconnection:Disconnect() end
+                        if releaseconnection then releaseconnection:Disconnect() end
+                        
                         moveconnection = mouse.Move:Connect(updateSlider)
                         releaseconnection = uis.InputEnded:Connect(function(Mouse)
                             if Mouse.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -1424,8 +1430,8 @@ function Kavo.CreateLib(kavName, themeList)
                                 game.TweenService:Create(val, TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.In), {
                                     TextTransparency = 1
                                 }):Play()
-                                moveconnection:Disconnect()
-                                releaseconnection:Disconnect()
+                                if moveconnection then moveconnection:Disconnect() end
+                                if releaseconnection then releaseconnection:Disconnect() end
                             end
                         end)
                     else

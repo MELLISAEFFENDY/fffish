@@ -460,22 +460,27 @@ end
 
 -- Function to add minimize button to main UI
 local function addMinimizeButton()
-    task.wait(3) -- Wait longer for UI to fully load
+    print("🔍 Starting minimize button addition...")
+    task.wait(5) -- Wait longer for UI to fully load
     
     pcall(function()
+        print("🔍 Looking for Kavo GUI...")
         -- Multiple attempts to find GUI
         local kavoGui = nil
         local attempts = 0
         
-        while not kavoGui and attempts < 10 do
+        while not kavoGui and attempts < 15 do
             kavoGui = lp.PlayerGui:FindFirstChild("Kavo")
             if not kavoGui then
                 for _, gui in pairs(lp.PlayerGui:GetChildren()) do
                     if gui:IsA("ScreenGui") and gui:FindFirstChild("Main") then
                         kavoGui = gui
+                        print("🔍 Found alternative GUI:", gui.Name)
                         break
                     end
                 end
+            else
+                print("🔍 Found Kavo GUI!")
             end
             attempts = attempts + 1
             task.wait(0.5)
