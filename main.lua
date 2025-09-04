@@ -509,6 +509,10 @@ local function addMinimizeButton()
         minimizeBtn.ZIndex = 10
         minimizeBtn.Parent = topBar
         
+        print("✅ Minimize button created and parented to:", topBar.Name)
+        print("📍 Button position:", minimizeBtn.Position)
+        print("📏 Button size:", minimizeBtn.Size)
+        
         local corner = Instance.new("UICorner")
         corner.CornerRadius = UDim.new(0, 4)
         corner.Parent = minimizeBtn
@@ -557,6 +561,7 @@ local success = pcall(function()
         
         -- Add minimize button after UI loads
         task.spawn(function()
+            print("🚀 Starting addMinimizeButton in background...")
             addMinimizeButton()
         end)
         

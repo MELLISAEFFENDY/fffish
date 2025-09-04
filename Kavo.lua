@@ -1401,6 +1401,8 @@ function Kavo.CreateLib(kavName, themeList)
                 local Value = minvalue or 0
                 local moveconnection = nil
                 local releaseconnection = nil
+                local mouse = game.Players.LocalPlayer:GetMouse()
+                local uis = game:GetService("UserInputService")
                 
                 sliderBtn.MouseButton1Down:Connect(function()
                     if not focusing then
@@ -1432,6 +1434,8 @@ function Kavo.CreateLib(kavName, themeList)
                                 }):Play()
                                 if moveconnection then moveconnection:Disconnect() end
                                 if releaseconnection then releaseconnection:Disconnect() end
+                                moveconnection = nil
+                                releaseconnection = nil
                             end
                         end)
                     else
