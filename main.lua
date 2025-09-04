@@ -622,7 +622,7 @@ CastSection:NewToggle("Auto Cast", "Automatically cast fishing rod", function(st
 end)
 
 -- Fix slider issue - properly define default value
-local castSlider = CastSection:NewSlider("Auto Cast Delay", "Delay between auto casts (seconds)", 5, 0.1, function(value)
+local castSlider = CastSection:NewSlider("Auto Cast Delay", "Delay between auto casts (seconds)", 0.1, 5, function(value)
     flags['autocastdelay'] = value
 end)
 
@@ -637,7 +637,7 @@ ReelSection:NewToggle("Auto Reel", "Automatically reel in fish", function(state)
 end)
 
 -- Fix slider issue - properly define default value
-local reelSlider = ReelSection:NewSlider("Auto Reel Delay", "Delay between auto reels (seconds)", 5, 0.1, function(value)
+local reelSlider = ReelSection:NewSlider("Auto Reel Delay", "Delay between auto reels (seconds)", 0.1, 5, function(value)
     flags['autoreeldelay'] = value
 end)
 
