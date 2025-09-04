@@ -1370,7 +1370,7 @@ function Kavo.CreateLib(kavName, themeList)
                 sliderDrag.BackgroundColor3 = themeList.SchemeColor
                 sliderDrag.BorderColor3 = Color3.fromRGB(74, 99, 135)
                 sliderDrag.BorderSizePixel = 0
-                sliderDrag.Size = UDim2.new(0, math.floor((minvalue / maxvalue) * 149), 1, 0)
+                sliderDrag.Size = UDim2.new(0, 0, 1, 0)  -- Start at 0 position
 
                 UICorner_3.Parent = sliderDrag
 
@@ -1473,6 +1473,11 @@ function Kavo.CreateLib(kavName, themeList)
                 local releaseconnection = nil
                 local mouse = game.Players.LocalPlayer:GetMouse()
                 local uis = game:GetService("UserInputService")
+                
+                -- Initialize with default value
+                pcall(function()
+                    callback(Value)
+                end)
                 
                 sliderBtn.MouseButton1Down:Connect(function()
                     if not focusing then
