@@ -338,47 +338,12 @@ if not success then
     end
 end
 
--- Fallback to simple UI if Kavo fails
+-- Check if Kavo loaded successfully
 if not success or not library then
-    warn("❌ Failed to load Kavo UI from all sources, using fallback")
-    -- Create simple UI structure
-    library = {}
-    function library.CreateLib(name, theme)
-        local lib = {}
-        function lib:NewTab(name)
-            local tab = {}
-            function tab:NewSection(name)
-                local section = {}
-                function section:NewToggle(name, desc, callback)
-                    if callback then callback(false) end
-                    return {UpdateToggle = function() end}
-                end
-                function section:NewDropdown(name, desc, options, callback)
-                    if callback then callback(options[1]) end
-                    return {Refresh = function() end}
-                end
-                function section:NewButton(name, desc, callback)
-                    if callback then callback() end
-                    return {UpdateButton = function() end}
-                end
-                function section:NewSlider(name, desc, max, min, callback)
-                    if callback then callback(min) end
-                    return {}
-                end
-                function section:NewTextBox(name, desc, callback)
-                    if callback then callback("") end
-                    return {}
-                end
-                return section
-            end
-            return tab
-        end
-        return lib
-    end
-    print("⚠️ Using fallback UI - limited functionality")
-else
-    print("🎣 Kavo UI library loaded successfully!")
+    error("❌ Failed to load Kavo UI library from all sources!")
 end
+
+print("🎣 Kavo UI library loaded successfully!")
 
 -- Function to create floating button
 local function createFloatingButton()
@@ -640,24 +605,6 @@ if Window then
     TeleTab = Window:NewTab("🌍 Teleports")
     VisualTab = Window:NewTab("👁️ Visuals")
     print("✅ All tabs created successfully")
-else
-    warn("❌ Window not created, creating fallback tabs")
-    -- Fallback tabs
-    AutoTab = {NewSection = function() return {
-        NewToggle = function(name, desc, callback) callback(false); return {UpdateToggle = function() end} end,
-        NewSlider = function(name, desc, max, min, callback) callback(min); return {} end
-    } end}
-    ModTab = {NewSection = function() return {
-        NewToggle = function(name, desc, callback) callback(false); return {UpdateToggle = function() end} end
-    } end}
-    TeleTab = {NewSection = function() return {
-        NewDropdown = function(name, desc, options, callback) callback(options[1]); return {Refresh = function() end} end,
-        NewButton = function(name, desc, callback) return {UpdateButton = function() end} end
-    } end}
-    VisualTab = {NewSection = function() return {
-        NewToggle = function(name, desc, callback) callback(false); return {UpdateToggle = function() end} end,
-        NewDropdown = function(name, desc, options, callback) callback(options[1]); return {Refresh = function() end} end
-    } end}
 end
 
 -- Automation Section
