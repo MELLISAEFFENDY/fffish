@@ -291,6 +291,74 @@ function Kavo.CreateLib(kavName, themeList)
         ScreenGui:Destroy()
     end)
 
+    -- Add minimize button right next to close button
+    local minimize = Instance.new("TextButton")
+    minimize.Name = "minimize"
+    minimize.Parent = MainHeader
+    minimize.BackgroundColor3 = Color3.fromRGB(74, 99, 135)
+    minimize.Position = UDim2.new(0.91, 0, 0.137999997, 0)
+    minimize.Size = UDim2.new(0, 21, 0, 21)
+    minimize.ZIndex = 2
+    minimize.Text = "—"
+    minimize.TextColor3 = Color3.fromRGB(255, 255, 255)
+    minimize.TextSize = 14
+    minimize.Font = Enum.Font.SourceSansBold
+    minimize.BorderSizePixel = 0
+    
+    local minimizeCorner = Instance.new("UICorner")
+    minimizeCorner.CornerRadius = UDim.new(0, 3)
+    minimizeCorner.Parent = minimize
+    
+    minimize.MouseButton1Click:Connect(function()
+        Main.Visible = false
+        
+        -- Create floating button
+        local floatingGui = Instance.new("ScreenGui")
+        floatingGui.Name = "FloatingButton"
+        floatingGui.ResetOnSpawn = false
+        floatingGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+        floatingGui.DisplayOrder = 999999
+        
+        local floatingFrame = Instance.new("Frame")
+        floatingFrame.Name = "FloatingFrame"
+        floatingFrame.Size = UDim2.new(0, 60, 0, 60)
+        floatingFrame.Position = UDim2.new(1, -80, 0, 20)
+        floatingFrame.BackgroundColor3 = Color3.fromRGB(45, 65, 95)
+        floatingFrame.BorderSizePixel = 0
+        floatingFrame.Parent = floatingGui
+        floatingFrame.Active = true
+        floatingFrame.Draggable = true
+        
+        local floatingCorner = Instance.new("UICorner")
+        floatingCorner.CornerRadius = UDim.new(0, 30)
+        floatingCorner.Parent = floatingFrame
+        
+        local floatingButton = Instance.new("TextButton")
+        floatingButton.Name = "RestoreButton"
+        floatingButton.Size = UDim2.new(1, 0, 1, 0)
+        floatingButton.Position = UDim2.new(0, 0, 0, 0)
+        floatingButton.BackgroundTransparency = 1
+        floatingButton.Text = "🎣"
+        floatingButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+        floatingButton.TextSize = 24
+        floatingButton.Font = Enum.Font.SourceSansBold
+        floatingButton.Parent = floatingFrame
+        
+        floatingButton.MouseButton1Click:Connect(function()
+            Main.Visible = true
+            floatingGui:Destroy()
+        end)
+        
+        -- Add to CoreGui or PlayerGui
+        pcall(function()
+            if game.CoreGui then
+                floatingGui.Parent = game.CoreGui
+            else
+                floatingGui.Parent = game.Players.LocalPlayer.PlayerGui
+            end
+        end)
+    end)
+
     MainSide.Name = "MainSide"
     MainSide.Parent = Main
     MainSide.BackgroundColor3 = themeList.Header
