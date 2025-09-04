@@ -473,9 +473,16 @@ local function addMinimizeButton()
             return 
         end
         
-        local topBar = mainFrame:FindFirstChild("MainHeader")
+        local topBar = mainFrame:FindFirstChild("MainHeader") 
+                    or mainFrame:FindFirstChild("Header")
+                    or mainFrame:FindFirstChild("TopBar")
+                    or mainFrame:FindFirstChild("TitleBar")
+        
         if not topBar then 
-            warn("❌ MainHeader not found")
+            warn("❌ Header not found, available children:")
+            for _, child in pairs(mainFrame:GetChildren()) do
+                print("  - " .. child.Name .. " (" .. child.ClassName .. ")")
+            end
             return 
         end
         
@@ -554,7 +561,10 @@ pcall(function()
                 
                 if kavoGui and kavoGui:FindFirstChild("Main") then
                     local mainFrame = kavoGui:FindFirstChild("Main")
-                    local header = mainFrame:FindFirstChild("MainHeader")
+                    local header = mainFrame:FindFirstChild("MainHeader") 
+                                or mainFrame:FindFirstChild("Header")
+                                or mainFrame:FindFirstChild("TopBar")
+                                or mainFrame:FindFirstChild("TitleBar")
                     if header then
                         -- Enable dragging for main UI
                         local dragging = false
