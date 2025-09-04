@@ -5,6 +5,19 @@ local tweeninfo = TweenInfo.new
 local input = game:GetService("UserInputService")
 local run = game:GetService("RunService")
 
+-- Helper function for touch + mouse compatible clicks
+function Kavo:ConnectClick(element, callback)
+    element.InputBegan:Connect(function(inputObject)
+        if inputObject.UserInputType == Enum.UserInputType.MouseButton1 or inputObject.UserInputType == Enum.UserInputType.Touch then
+            callback()
+        end
+    end)
+    -- Fallback for older compatibility
+    pcall(function()
+        element.MouseButton1Click:Connect(callback)
+    end)
+end
+
 local Utility = {}
 local Objects = {}
 function Kavo:DraggingEnabled(frame, parent)
@@ -17,7 +30,7 @@ function Kavo:DraggingEnabled(frame, parent)
     local UserInputService = game:GetService("UserInputService")
 
     frame.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             dragging = true
             mousePos = input.Position
             framePos = parent.Position
@@ -31,7 +44,7 @@ function Kavo:DraggingEnabled(frame, parent)
     end)
 
     frame.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement then
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
             dragInput = input
         end
     end)
@@ -292,6 +305,19 @@ function Kavo.CreateLib(kavName, themeList)
         wait(1)
         ScreenGui:Destroy()
     end)
+    -- Touch support for close button
+    Kavo:ConnectClick(close, function()
+        game.TweenService:Create(close, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {
+            ImageTransparency = 1
+        }):Play()
+        wait()
+        game.TweenService:Create(Main, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+			Size = UDim2.new(0,0,0,0),
+			Position = UDim2.new(0, Main.AbsolutePosition.X + (Main.AbsoluteSize.X / 2), 0, Main.AbsolutePosition.Y + (Main.AbsoluteSize.Y / 2))
+		}):Play()
+        wait(1)
+        ScreenGui:Destroy()
+    end)
 
     -- Add minimize button right next to close button
     local minimize = Instance.new("TextButton")
@@ -350,6 +376,62 @@ function Kavo.CreateLib(kavName, themeList)
             Main.Visible = true
             floatingGui:Destroy()
         end)
+        -- Touch support for floating button
+        Kavo:ConnectClick(floatingButton, function()
+            Main.Visible = true
+            floatingGui:Destroy()
+        end)
+        
+        -- Add to CoreGui or PlayerGui
+        pcall(function()
+            if game.CoreGui then
+                floatingGui.Parent = game.CoreGui
+            else
+                floatingGui.Parent = game.Players.LocalPlayer.PlayerGui
+            end
+        end)
+    end)
+    -- Touch support for minimize button
+    Kavo:ConnectClick(minimize, function()
+        Main.Visible = false
+        
+        -- Create floating button
+        local floatingGui = Instance.new("ScreenGui")
+        floatingGui.Name = "FloatingButton"
+        floatingGui.ResetOnSpawn = false
+        floatingGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+        floatingGui.DisplayOrder = 999999
+        
+        local floatingFrame = Instance.new("Frame")
+        floatingFrame.Name = "FloatingFrame"
+        floatingFrame.Size = UDim2.new(0, 60, 0, 60)
+        floatingFrame.Position = UDim2.new(1, -80, 0, 20)
+        floatingFrame.BackgroundColor3 = Color3.fromRGB(45, 65, 95)
+        floatingFrame.BorderSizePixel = 0
+        floatingFrame.Parent = floatingGui
+        floatingFrame.Active = true
+        floatingFrame.Draggable = true
+        
+        local floatingCorner = Instance.new("UICorner")
+        floatingCorner.CornerRadius = UDim.new(0, 30)
+        floatingCorner.Parent = floatingFrame
+        
+        local floatingButton = Instance.new("TextButton")
+        floatingButton.Name = "RestoreButton"
+        floatingButton.Size = UDim2.new(1, 0, 1, 0)
+        floatingButton.Position = UDim2.new(0, 0, 0, 0)
+        floatingButton.BackgroundTransparency = 1
+        floatingButton.Text = "🎣"
+        floatingButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+        floatingButton.TextSize = 24
+        floatingButton.Font = Enum.Font.SourceSansBold
+        floatingButton.Parent = floatingFrame
+        
+        -- Touch support for floating button
+        Kavo:ConnectClick(floatingButton, function()
+            Main.Visible = true
+            floatingGui:Destroy()
+        end)
         
         -- Add to CoreGui or PlayerGui
         pcall(function()
@@ -390,6 +472,7 @@ function Kavo.CreateLib(kavName, themeList)
     tabListing.Name = "tabListing"
     tabListing.Parent = tabFrames
     tabListing.SortOrder = Enum.SortOrder.LayoutOrder
+    tabListing.Padding = UDim.new(0, 2)  -- Add small padding between tabs for divider spacing
 
     pages.Name = "pages"
     pages.Parent = Main
@@ -482,6 +565,22 @@ function Kavo.CreateLib(kavName, themeList)
         Objects[tabButton] = "TextColor3"
         tabButton.TextSize = 14.000
         tabButton.BackgroundTransparency = 1
+        
+        -- Add bottom border for tab separation
+        if not first then  -- Don't add border to the first tab
+            local tabBorder = Instance.new("Frame")
+            tabBorder.Name = "TabBorder"
+            tabBorder.Parent = tabButton
+            tabBorder.BackgroundColor3 = Color3.fromRGB(
+                themeList.SchemeColor.r * 255 - 30, 
+                themeList.SchemeColor.g * 255 - 30, 
+                themeList.SchemeColor.b * 255 - 30
+            )
+            tabBorder.BorderSizePixel = 0
+            tabBorder.Size = UDim2.new(0.8, 0, 0, 1)  -- Horizontal line, 80% width
+            tabBorder.Position = UDim2.new(0.1, 0, 0, 0)  -- Centered horizontally, at top
+            Objects[tabBorder] = "BackgroundColor3"
+        end
 
         if first then
             first = false
@@ -1358,6 +1457,7 @@ function Kavo.CreateLib(kavName, themeList)
                 sliderBtn.Text = ""
                 sliderBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
                 sliderBtn.TextSize = 14.000
+                sliderBtn.Active = true  -- Enable touch input
 
                 UICorner_2.Parent = sliderBtn
 
@@ -1479,14 +1579,21 @@ function Kavo.CreateLib(kavName, themeList)
                     callback(Value)
                 end)
                 
-                sliderBtn.MouseButton1Down:Connect(function()
-                    if not focusing then
+                -- Touch and Mouse compatible slider
+                local isSliding = false
+                local currentInput = nil
+                
+                sliderBtn.InputBegan:Connect(function(input)
+                    if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) and not focusing then
+                        isSliding = true
+                        currentInput = input
+                        
                         game.TweenService:Create(val, TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.In), {
                             TextTransparency = 0
                         }):Play()
                         
-                        local function updateSlider()
-                            local percentage = math.clamp((mouse.X - sliderBtn.AbsolutePosition.X) / sliderBtn.AbsoluteSize.X, 0, 1)
+                        local function updateSlider(inputPos)
+                            local percentage = math.clamp((inputPos.X - sliderBtn.AbsolutePosition.X) / sliderBtn.AbsoluteSize.X, 0, 1)
                             Value = math.floor(((maxvalue - minvalue) * percentage) + minvalue)
                             val.Text = tostring(Value)
                             sliderDrag.Size = UDim2.new(percentage, 0, 1, 0)
@@ -1495,15 +1602,22 @@ function Kavo.CreateLib(kavName, themeList)
                             end)
                         end
                         
-                        updateSlider()
+                        -- Initial update
+                        updateSlider(input.Position)
                         
+                        -- Connect to input changes
                         if moveconnection then moveconnection:Disconnect() end
                         if releaseconnection then releaseconnection:Disconnect() end
                         
-                        moveconnection = mouse.Move:Connect(updateSlider)
-                        releaseconnection = uis.InputEnded:Connect(function(Mouse)
-                            if Mouse.UserInputType == Enum.UserInputType.MouseButton1 then
-                                updateSlider()
+                        moveconnection = uis.InputChanged:Connect(function(changedInput)
+                            if changedInput == currentInput and isSliding then
+                                updateSlider(changedInput.Position)
+                            end
+                        end)
+                        
+                        releaseconnection = uis.InputEnded:Connect(function(endedInput)
+                            if endedInput == currentInput then
+                                isSliding = false
                                 game.TweenService:Create(val, TweenInfo.new(0.1, Enum.EasingStyle.Linear, Enum.EasingDirection.In), {
                                     TextTransparency = 1
                                 }):Play()
@@ -1511,14 +1625,9 @@ function Kavo.CreateLib(kavName, themeList)
                                 if releaseconnection then releaseconnection:Disconnect() end
                                 moveconnection = nil
                                 releaseconnection = nil
+                                currentInput = nil
                             end
                         end)
-                    else
-                        for i,v in next, infoContainer:GetChildren() do
-                            Utility:TweenObject(v, {Position = UDim2.new(0,0,2,0)}, 0.2)
-                            focusing = false
-                        end
-                        Utility:TweenObject(blurFrame, {BackgroundTransparency = 1}, 0.2)
                     end
                 end)
                 viewInfo.MouseButton1Click:Connect(function()
