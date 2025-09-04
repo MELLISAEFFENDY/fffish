@@ -279,7 +279,7 @@ local isMinimized = false
 local floatingButton = nil
 
 -- Load Kavo UI from GitHub repository or local file
-local kavoUrl = 'https://raw.githubusercontent.com/MELLISAEFFENDY/chfish/main/new/Kavo.lua'
+local kavoUrl = 'https://raw.githubusercontent.com/MELLISAEFFENDY/fffish/main/Kavo.lua'
 
 -- Try to create folder and download library
 pcall(function()
@@ -296,23 +296,51 @@ end)
 
 -- Try to load library with multiple methods
 local success = false
+
+-- Method 1: Try to load from local file first
 if CheckFunc(loadfile) then
     pcall(function()
         library = loadfile('fisch/kavo.lua')()
-        success = true
+        if library and library.CreateLib then
+            success = true
+            print("✅ Kavo loaded from local file")
+        end
     end)
 end
 
+-- Method 2: Load directly from current repo
 if not success then
     pcall(function()
         library = loadstring(game:HttpGet(kavoUrl))()
-        success = true
+        if library and library.CreateLib then
+            success = true
+            print("✅ Kavo loaded from GitHub repo")
+        end
     end)
+end
+
+-- Method 3: Load from backup URLs
+if not success then
+    local backupUrls = {
+        'https://github.com/MELLISAEFFENDY/fffish/raw/main/Kavo.lua',
+        'https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua'
+    }
+    
+    for i, url in ipairs(backupUrls) do
+        pcall(function()
+            library = loadstring(game:HttpGet(url))()
+            if library and library.CreateLib then
+                success = true
+                print("✅ Kavo loaded from backup URL " .. i)
+            end
+        end)
+        if success then break end
+    end
 end
 
 -- Fallback to simple UI if Kavo fails
 if not success or not library then
-    warn("Failed to load Kavo UI, using fallback")
+    warn("❌ Failed to load Kavo UI from all sources, using fallback")
     -- Create simple UI structure
     library = {}
     function library.CreateLib(name, theme)
@@ -323,12 +351,23 @@ if not success or not library then
                 local section = {}
                 function section:NewToggle(name, desc, callback)
                     if callback then callback(false) end
+                    return {UpdateToggle = function() end}
                 end
                 function section:NewDropdown(name, desc, options, callback)
                     if callback then callback(options[1]) end
+                    return {Refresh = function() end}
                 end
                 function section:NewButton(name, desc, callback)
-                    -- Button functionality
+                    if callback then callback() end
+                    return {UpdateButton = function() end}
+                end
+                function section:NewSlider(name, desc, max, min, callback)
+                    if callback then callback(min) end
+                    return {}
+                end
+                function section:NewTextBox(name, desc, callback)
+                    if callback then callback("") end
+                    return {}
                 end
                 return section
             end
@@ -336,6 +375,9 @@ if not success or not library then
         end
         return lib
     end
+    print("⚠️ Using fallback UI - limited functionality")
+else
+    print("🎣 Kavo UI library loaded successfully!")
 end
 
 -- Function to create floating button
@@ -434,29 +476,47 @@ end
 
 -- Function to add minimize button to main UI
 local function addMinimizeButton()
-    task.wait(2) -- Wait longer for UI to fully load
+    task.wait(3) -- Wait longer for UI to fully load
     
     pcall(function()
-        local kavoGui = lp.PlayerGui:FindFirstChild("Kavo")
+        -- Multiple attempts to find GUI
+        local kavoGui = nil
+        local attempts = 0
+        
+        while not kavoGui and attempts < 10 do
+            kavoGui = lp.PlayerGui:FindFirstChild("Kavo")
+            if not kavoGui then
+                for _, gui in pairs(lp.PlayerGui:GetChildren()) do
+                    if gui:IsA("ScreenGui") and gui:FindFirstChild("Main") then
+                        kavoGui = gui
+                        break
+                    end
+                end
+            end
+            attempts = attempts + 1
+            task.wait(0.5)
+        end
+        
         if not kavoGui then 
-            warn("Kavo GUI not found")
+            warn("❌ Kavo GUI not found after multiple attempts")
             return 
         end
         
         local mainFrame = kavoGui:FindFirstChild("Main")
         if not mainFrame then 
-            warn("Main frame not found")
+            warn("❌ Main frame not found")
             return 
         end
         
         local topBar = mainFrame:FindFirstChild("MainHeader")
         if not topBar then 
-            warn("TopBar not found")
+            warn("❌ MainHeader not found")
             return 
         end
         
         -- Check if minimize button already exists
         if topBar:FindFirstChild("MinimizeButton") then
+            print("ℹ️ Minimize button already exists")
             return
         end
         
@@ -496,69 +556,109 @@ local function addMinimizeButton()
             minimizeBtn.BackgroundColor3 = Color3.fromRGB(74, 99, 135)
         end)
         
-        print("Minimize button added successfully")
+        print("✅ Minimize button added successfully")
     end)
 end
 
 -- Create UI Window with better error handling
+local Window
 pcall(function()
-    Window = library.CreateLib("🎣 Fisch Script", "Ocean")
-    
-    -- Add minimize button after UI loads
-    task.spawn(function()
-        addMinimizeButton()
-    end)
-    
-    -- Make UI draggable
-    task.spawn(function()
-        task.wait(1)
-        pcall(function()
-            local kavoGui = lp.PlayerGui:FindFirstChild("Kavo")
-            if kavoGui and kavoGui:FindFirstChild("Main") then
-                local mainFrame = kavoGui:FindFirstChild("Main")
-                local header = mainFrame:FindFirstChild("MainHeader")
-                if header then
-                    -- Enable dragging for main UI
-                    local dragging = false
-                    local dragInput, mousePos, framePos
-
-                    header.InputBegan:Connect(function(input)
-                        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                            dragging = true
-                            mousePos = input.Position
-                            framePos = mainFrame.Position
-                            
-                            input.Changed:Connect(function()
-                                if input.UserInputState == Enum.UserInputState.End then
-                                    dragging = false
-                                end
-                            end)
-                        end
-                    end)
-
-                    header.InputChanged:Connect(function(input)
-                        if input.UserInputType == Enum.UserInputType.MouseMovement then
-                            dragInput = input
-                        end
-                    end)
-
-                    game:GetService("UserInputService").InputChanged:Connect(function(input)
-                        if input == dragInput and dragging then
-                            local delta = input.Position - mousePos
-                            mainFrame.Position = UDim2.new(framePos.X.Scale, framePos.X.Offset + delta.X, framePos.Y.Scale, framePos.Y.Offset + delta.Y)
-                        end
-                    end)
-                end
-            end
+    if library and library.CreateLib then
+        Window = library.CreateLib("🎣 Fisch Script", "Ocean")
+        print("✅ Main UI window created successfully")
+        
+        -- Add minimize button after UI loads
+        task.spawn(function()
+            addMinimizeButton()
         end)
-    end)
+        
+        -- Make UI draggable
+        task.spawn(function()
+            task.wait(2)
+            pcall(function()
+                local kavoGui = lp.PlayerGui:FindFirstChild("Kavo")
+                if not kavoGui then
+                    -- Look for any ScreenGui with Main frame
+                    for _, gui in pairs(lp.PlayerGui:GetChildren()) do
+                        if gui:IsA("ScreenGui") and gui:FindFirstChild("Main") then
+                            kavoGui = gui
+                            break
+                        end
+                    end
+                end
+                
+                if kavoGui and kavoGui:FindFirstChild("Main") then
+                    local mainFrame = kavoGui:FindFirstChild("Main")
+                    local header = mainFrame:FindFirstChild("MainHeader")
+                    if header then
+                        -- Enable dragging for main UI
+                        local dragging = false
+                        local dragInput, mousePos, framePos
+
+                        header.InputBegan:Connect(function(input)
+                            if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                                dragging = true
+                                mousePos = input.Position
+                                framePos = mainFrame.Position
+                                
+                                input.Changed:Connect(function()
+                                    if input.UserInputState == Enum.UserInputState.End then
+                                        dragging = false
+                                    end
+                                end)
+                            end
+                        end)
+
+                        header.InputChanged:Connect(function(input)
+                            if input.UserInputType == Enum.UserInputType.MouseMovement then
+                                dragInput = input
+                            end
+                        end)
+
+                        game:GetService("UserInputService").InputChanged:Connect(function(input)
+                            if input == dragInput and dragging then
+                                local delta = input.Position - mousePos
+                                mainFrame.Position = UDim2.new(framePos.X.Scale, framePos.X.Offset + delta.X, framePos.Y.Scale, framePos.Y.Offset + delta.Y)
+                            end
+                        end)
+                        print("✅ UI dragging enabled")
+                    end
+                end
+            end)
+        end)
+    else
+        error("❌ Library not available")
+    end
 end)
 
 -- Create Tabs
-local AutoTab = Window:NewTab("🎣 Automation")
-local ModTab = Window:NewTab("⚙️ Modifications") 
-local TeleTab = Window:NewTab("🌍 Teleports")
-local VisualTab = Window:NewTab("👁️ Visuals")
+local AutoTab, ModTab, TeleTab, VisualTab
+
+if Window then
+    AutoTab = Window:NewTab("🎣 Automation")
+    ModTab = Window:NewTab("⚙️ Modifications") 
+    TeleTab = Window:NewTab("🌍 Teleports")
+    VisualTab = Window:NewTab("👁️ Visuals")
+    print("✅ All tabs created successfully")
+else
+    warn("❌ Window not created, creating fallback tabs")
+    -- Fallback tabs
+    AutoTab = {NewSection = function() return {
+        NewToggle = function(name, desc, callback) callback(false); return {UpdateToggle = function() end} end,
+        NewSlider = function(name, desc, max, min, callback) callback(min); return {} end
+    } end}
+    ModTab = {NewSection = function() return {
+        NewToggle = function(name, desc, callback) callback(false); return {UpdateToggle = function() end} end
+    } end}
+    TeleTab = {NewSection = function() return {
+        NewDropdown = function(name, desc, options, callback) callback(options[1]); return {Refresh = function() end} end,
+        NewButton = function(name, desc, callback) return {UpdateButton = function() end} end
+    } end}
+    VisualTab = {NewSection = function() return {
+        NewToggle = function(name, desc, callback) callback(false); return {UpdateToggle = function() end} end,
+        NewDropdown = function(name, desc, options, callback) callback(options[1]); return {Refresh = function() end} end
+    } end}
+end
 
 -- Automation Section
 local AutoSection = AutoTab:NewSection("Autofarm")
