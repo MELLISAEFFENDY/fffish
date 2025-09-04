@@ -297,48 +297,22 @@ local Window
 local isMinimized = false
 local floatingButton = nil
 
--- Load Kavo UI from GitHub repository or local file
+-- Load Kavo UI from GitHub repository (always fresh)
 local kavoUrl = 'https://raw.githubusercontent.com/MELLISAEFFENDY/fffish/main/Kavo.lua'
 
--- Try to create folder and download library
-pcall(function()
-    if CheckFunc(makefolder) and (CheckFunc(isfolder) and not isfolder('fisch')) then
-        makefolder('fisch')
-    end
-end)
-
-pcall(function()
-    if CheckFunc(writefile) and (CheckFunc(isfile) and not isfile('fisch/kavo.lua')) then
-        writefile('fisch/kavo.lua', game:HttpGet(kavoUrl))
-    end
-end)
-
--- Try to load library with multiple methods
+-- Try to load library with multiple methods (always from GitHub)
 local success = false
 
--- Method 1: Try to load from local file first
-if CheckFunc(loadfile) then
-    pcall(function()
-        library = loadfile('fisch/kavo.lua')()
-        if library and library.CreateLib then
-            success = true
-            print("✅ Kavo loaded from local file")
-        end
-    end)
-end
+-- Method 1: Load directly from current repo
+pcall(function()
+    library = loadstring(game:HttpGet(kavoUrl))()
+    if library and library.CreateLib then
+        success = true
+        print("✅ Kavo loaded from GitHub repo")
+    end
+end)
 
--- Method 2: Load directly from current repo
-if not success then
-    pcall(function()
-        library = loadstring(game:HttpGet(kavoUrl))()
-        if library and library.CreateLib then
-            success = true
-            print("✅ Kavo loaded from GitHub repo")
-        end
-    end)
-end
-
--- Method 3: Load from backup URLs
+-- Method 2: Load from backup URLs
 if not success then
     local backupUrls = {
         'https://github.com/MELLISAEFFENDY/fffish/raw/main/Kavo.lua',
