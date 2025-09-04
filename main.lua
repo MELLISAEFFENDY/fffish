@@ -4,6 +4,25 @@ local ReplicatedStorage = cloneref(game:GetService('ReplicatedStorage'))
 local RunService = cloneref(game:GetService('RunService'))
 local GuiService = cloneref(game:GetService('GuiService'))
 
+-- Protect TweenService from workspace errors
+pcall(function()
+    local TweenService = game:GetService("TweenService")
+    local originalCreate = TweenService.Create
+    TweenService.Create = function(self, instance, ...)
+        if instance and instance.Parent then
+            return originalCreate(self, instance, ...)
+        else
+            -- Return dummy tween for invalid instances
+            return {
+                Play = function() end,
+                Cancel = function() end,
+                Pause = function() end,
+                Destroy = function() end
+            }
+        end
+    end
+end)
+
 --// Variables
 local flags = {}
 local characterposition
@@ -539,8 +558,21 @@ end
 
 -- Create UI Window with better error handling
 local Window
-pcall(function()
+local success = pcall(function()
     if library and library.CreateLib then
+        -- Hook TweenService to prevent workspace errors
+        if game:GetService("TweenService") then
+            local TweenService = game:GetService("TweenService")
+            local originalCreate = TweenService.Create
+            TweenService.Create = function(self, instance, ...)
+                if instance and instance.Parent then
+                    return originalCreate(self, instance, ...)
+                else
+                    return {Play = function() end, Cancel = function() end}
+                end
+            end
+        end
+        
         Window = library.CreateLib("🎣 Fisch Script", "Ocean")
         print("✅ Main UI window created successfully")
         
@@ -612,6 +644,10 @@ pcall(function()
         error("❌ Library not available")
     end
 end)
+
+if not success then
+    error("❌ Failed to create UI window")
+end
 
 -- Create Tabs
 local AutoTab, ModTab, TeleTab, VisualTab
